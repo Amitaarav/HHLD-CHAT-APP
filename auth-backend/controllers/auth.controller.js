@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import User from "../db/models/user.model.js";
+import generateJWTTokenAndSetCoockie from "../utils/generateToken.js";
 
 const signup = async(req, res) => {
     try {
@@ -18,6 +19,9 @@ const signup = async(req, res) => {
                 username: username,
                 password: hashedPassword
             });
+
+            generateJWTTokenAndSetCoockie(user._id, res);
+            
             await user.save();
             res.status(201).json({
                 message: "User registered successfully"
