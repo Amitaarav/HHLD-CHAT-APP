@@ -1,52 +1,79 @@
-"use client"
-import React, { useEffect, useState } from 'react'
+
+"use client";
+
+import React, { useEffect, useState } from "react";
 import io from "socket.io-client";
 
-function chat() {
+function Chat() {
+  const [msg, setMsg] = useState("");
+  const [socket, setSocket] = useState(null);
+  const [msgs, setMsgs] = useState([]);
 
-  const [msg, setMsg] = useState('');
-  const [socket, setSocket ] = useState(null);
+  useEffect(() => {
+    console.log("Establishing websocket connection");
+
+    const newSocket = io("http://localhost:8080");
+
+    setSocket(newSocket);
+
+    // Listen for incoming messages
+    newSocket.on("chat msg", (message) => {
+      setMsgs((prevMsgs) => [...prevMsgs, message]);
+    });
+
+    newSocket.on("connect", () => {
+      console.log("Connected:", newSocket.id);
+    });
+
+    newSocket.on("connect_error", (error) => {
+      console.error("Connection error:", error.message);
+    });
+
+    return () => {
+      newSocket.close();
+    };
+  }, []);
 
   const sendMsg = (e) => {
     e.preventDefault();
-    if(socket){
-        socket.emit('chat msg', hello);
-        setMsg('')
+
+    if (socket?.connected && msg.trim()) {
+      socket.emit("chat msg", msg);
+      setMsg("");
     }
-  }
+  };
 
-  useEffect(()=>{
-
-    // Establish websocket connection
-    const newSocket = io('http://localhost:5000')
-    setSocket(newSocket);
-
-    // clean up the function 
-    return () => newSocket.close(); // whenever page is closed, cleanup function gets called
-  }, [])
-    return (
+  return (
     <div>
-        <form onSubmit={sendMsg} className="max-w-md mx-auto my-10">
+      <div className="msgs-container border-2">
+        {msgs.map((message, index) => (
+          <div key={index} className="msg text-right m-5">
+            {message}
+          </div>
+        ))}
+      </div>
+
+      <form onSubmit={sendMsg} className="max-w-md mx-auto my-10">
         <div className="relative">
-            <input
+          <input
             type="text"
             value={msg}
             onChange={(e) => setMsg(e.target.value)}
             placeholder="Type your text here"
             required
-            className="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            />
+            className="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50"
+          />
 
-            <button
+          <button
             type="submit"
-            className="text-white absolute inset-e-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-            >
+            className="text-white absolute right-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 rounded-lg text-sm px-4 py-2"
+          >
             Send
-            </button>
+          </button>
         </div>
-        </form>
+      </form>
     </div>
-    );
+  );
 }
 
-export default chat
+export default Chat;
