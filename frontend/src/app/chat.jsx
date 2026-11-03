@@ -38,16 +38,16 @@ function Chat() {
     e.preventDefault();
 
     if (socket?.connected && msg.trim()) {
-      socket.emit("chat msg", msg);
+      socket.broadcast.emit("chat msg", msg);
       setMsg("");
     }
   };
 
   return (
-    <div>
-      <div className="msgs-container border-2">
+    <div className="mt-8">
+      <div className="msgs-container border-2 border-gray-300 max-w-md mx-auto space-y-0.5 rounded-2xl">
         {msgs.map((message, index) => (
-          <div key={index} className="msg text-right m-5">
+          <div key={index} className="msg text-right m-5 bg-gray-100 rounded-sm p-2">
             {message}
           </div>
         ))}
